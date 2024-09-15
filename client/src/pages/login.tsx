@@ -25,6 +25,7 @@ export default function Login() {
   );
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>): void => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value.trim() }));
