@@ -1,5 +1,6 @@
 import Job from "../model/job.model.js";
-export const postjob = async (req, res) => {
+import { errorHandler } from "../utils/error.js";
+export const postjob = async (req, res, next) => {
   const {
     logo,
     Company,
@@ -9,31 +10,35 @@ export const postjob = async (req, res) => {
     Opening,
     Description,
   } = req.body;
+
   if (
-    !Company |
-    !Position |
-    !Location |
-    !CompaniesLocation |
-    !Opening |
+    !Company ||
+    !Position ||
+    !Location ||
+    !CompaniesLocation ||
+    !Opening ||
     !Description
   ) {
-    res.status(500).json({ message: "All Fields required" });
+    return next(errorHandler(400, "All fields are required"));
   }
+
+  const slug = req.body.Position.split(" ")
+    .join("-")
+    .toLowerCase()
+    .replace(/[^a-zA-Z0-9-]/g, "");
+
   const newJob = new Job({
-    logo,
-    Company,
-    Position,
-    Location,
-    CompaniesLocation,
-    Opening,
-    Description,
+    ...req.body,
+    slug,
+    userId: req.user.id,
   });
+
   try {
     const job = await newJob.save();
     res.status(200).json({ message: job });
     console.log(job);
   } catch (error) {
-    res.status(500).json({ message: error });
+    res.status(500).json({ message: error.message });
   }
 };
 
@@ -43,6 +48,6 @@ export const getPost = async (req, res) => {
     const job = await Job.findById(id);
     res.status(200).json(job);
   } catch (error) {
-    res.status(500).json({ message: error });
+    next(error);
   }
 };

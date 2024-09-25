@@ -21,3 +21,13 @@ mongoose.connect(connectionString, {}).then(() => {
     console.log(`Server is running on http://localhost:${port}`);
   });
 });
+
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || "internal server error";
+  res.status(statusCode).json({
+    sucess: false,
+    statusCode,
+    message,
+  });
+});

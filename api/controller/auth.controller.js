@@ -1,12 +1,13 @@
 import User from "../model/user.model.js";
 import bcyryptjs from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { errorHandler } from "../utils/error.js";
 import { configDotenv } from "dotenv";
 configDotenv.apply();
-export const signup = async (req, res) => {
+export const signup = async (req, res, next) => {
   const { firstname, lastname, email, password } = req.body;
   if (!firstname || !lastname || !email || !password) {
-    res.status(400).json({ message: "All fields are required" });
+    next(errorHandler(400, "All fields are required"));
   }
   const hashPassword = bcyryptjs.hashSync(password, 10);
 
@@ -20,23 +21,23 @@ export const signup = async (req, res) => {
     const user = await newUser.save();
     res.json({ user, message: "Signup Successfull" });
   } catch (error) {
-    res.json({ message: error });
+    next(error);
   }
 };
 
-export const signin = async (req, res) => {
+export const signin = async (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400).json({ message: "All fields are required" });
+    return next(errorHandler(400, "All fields are required"));
   }
   try {
     const validUser = await User.findOne({ email });
     if (!validUser) {
-      return res.status(404).json({ message: "User not found" });
+      return next(errorHandler(400, "User not found"));
     }
     const validPassword = bcyryptjs.compareSync(password, validUser.password);
     if (!validPassword) {
-      return res.status(400).json({ message: "Please enter correct password" });
+      return next(errorHandler(400, "Please enter correct password"));
     }
     const token = jwt.sign(
       { id: validUser._id, isAdmin: validUser.isAdmin },
@@ -50,6 +51,6 @@ export const signin = async (req, res) => {
       })
       .json(rest);
   } catch (error) {
-    res.status(500).json({ message: "something went wrong" });
+    next(error);
   }
 };
